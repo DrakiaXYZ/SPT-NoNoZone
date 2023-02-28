@@ -1,13 +1,16 @@
-﻿using System;
+﻿
+using System;
 using BepInEx;
 using BepInEx.Configuration;
-using Comfort.Common;
 using UnityEngine;
 using Newtonsoft.Json;
 using EFT;
 using System.IO;
 using System.Reflection;
-
+using Comfort.Common;
+using EFT.UI.Ragfair;
+using System.Collections.Generic;
+using dvize.NoNoZone;
 
 namespace NoNoZone
 {
@@ -15,48 +18,20 @@ namespace NoNoZone
     [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.0.0")]
     class NoNoZonePlugin : BaseUnityPlugin
     {
-        public static ConfigEntry<float> DistanceToPreventSpawn
-        {
-            get;
-            private set;
-        }
 
-        public static BotSpawnerClass botspawn;
+        public static ConfigEntry<float> DistanceClearBotSpawn;
         private void Awake()
         {
-            DistanceToPreventSpawn = Config.Bind(
+
+            DistanceClearBotSpawn = Config.Bind(
                 "Main Settings",
-                "Percentage Chance They Do Not Run Away from Grenade",
-                35f,
-                "Set the percentage chance here");
+                "DistanceClearBotSpawn",
+                20.0f,
+                "Distance to Keep Clear of Bot Spawns");
 
-            botspawn = Singleton<BotSpawnerClass>.Instance;
-            botspawn.OnBotCreated += CheckBotDistance();
+            new BotClassSpawnerPatch().Enable();
         }
 
-        private Action<BotOwner> CheckBotDistance()
-        {
-            try
-            {
-                foreach (Player bot in Singleton<GameWorld>.Instance.RegisteredPlayers)
-                {
-                    if (!bot.IsYourPlayer)
-                    {
-                        if (Vector3.Distance(bot.Position, Singleton<LocalPlayer>.Instance.Position) < DistanceToPreventSpawn.Value)
-                        {
-                            botspawn.DeletePlayer(bot);
-                        }
-                    }
-                }
-               
-            }
-            catch (Exception e)
-            {
-                Logger.LogInfo("NoNoZone: " + e);
-            }
 
-            return null;
-        }
-    
     }
 }

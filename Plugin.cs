@@ -30,6 +30,7 @@ namespace NoNoZone
                 "Distance to Keep Clear of Bot Spawns");
 
             new BotClassSpawnerPatch().Enable();
+
         }
 
 

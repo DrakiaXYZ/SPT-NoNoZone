@@ -9,6 +9,8 @@ using NoNoZone;
 using EFT.AssetsManager;
 using System;
 using EFT.Bots;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace dvize.NoNoZone
 {
@@ -18,10 +20,9 @@ namespace dvize.NoNoZone
         {
             try
             {
-                
                 var desiredType = PatchConstants.EftTypes.Single(x => x.Name == "BotsClass");
                 const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
-                var desiredMethod = desiredType.GetMethod("Add", flags);
+                var desiredMethod = desiredType.GetMethod("AddFromList", flags);
                 return desiredMethod;
             }
             catch
@@ -34,61 +35,50 @@ namespace dvize.NoNoZone
 
         [PatchPrefix]
 
-        public static void Prefix(BotsClass __instance, BotOwner bot)
+        public static bool Prefix(BotsClass __instance, ref List<BotOwner> ___list_0)
         {
-            
             var player = Singleton<GameWorld>.Instance.MainPlayer;
-            Logger.LogInfo($"NoNoZone: Bot Spawned");
-            if (bot != null && player != null)
+            var tempList = new List<BotOwner>(___list_0);
+            var playerPosition = player.Transform.position;
+            var game = Singleton<GameWorld>.Instance;
+
+            if (___list_0.Count > 0)
             {
-                var botPosition = bot.Transform.position;
-                var playerPosition = player.Transform.position;
-                var distance = Vector3.Distance(botPosition, playerPosition);
-                
-                if (distance < NoNoZonePlugin.DistanceClearBotSpawn.Value)
+                foreach (var botOwner in tempList)
                 {
-                    Logger.LogInfo("NoNoZone: Bot Spawned Too Close");
-                    try
-                    {
-                        __instance.Remove(bot);
-                    }
-                    catch(Exception f)
-                    {
-                        Logger.LogError($"NoNoZone: Failed to remove bot {f}");
-                    }
+                    var botPosition = botOwner.Transform.position;
+                    var distance = Vector3.Distance(botPosition, playerPosition);
 
-                    try
+                    if (distance < NoNoZonePlugin.DistanceClearBotSpawn.Value)
                     {
-                        bot.Deactivate();
-                        bot.Dispose();
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.LogError($"NoNoZone: Failed to Deactivate botOwner: {e}");
-                    }
+                        Logger.LogInfo($"NoNoZone: {botOwner.Profile.Info.Settings.Role} Spawned Too Close");
 
-                    //to re-add bot i need to pre-activate with another bot.. not worth hastle.
-                   /* try
-                    {
-                        __instance.Add(bot);
+                        try
+                        {
+                            botOwner.Disable(); 
+                        }
+                        catch (Exception f)
+                        {
+                            Logger.LogError($"NoNoZone: Failed to disable bot: {f}");
+                        }
+
+                        try
+                        {
+                            game.RegisteredPlayers.Remove(botOwner.GetPlayer);
+                        }
+                        catch (Exception testc)
+                        {
+                            Logger.LogError($"NoNoZone: Failed to Remove Registered Player: {testc}");
+                        }
                     }
-                    catch (Exception g)
-                    {
-                        Logger.LogError($"NoNoZone: Failed to re-add bot: {g}");
-                    }*/
-                    
-                    return;
                 }
+
+                return true;
             }
 
-            return;
+            return true;
         }
-        
     }
-
-
-
-
 
 
 }

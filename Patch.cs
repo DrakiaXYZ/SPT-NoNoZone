@@ -9,6 +9,7 @@ using NoNoZone;
 using EFT.AssetsManager;
 using System;
 using EFT.Bots;
+using EFT.InventoryLogic;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -52,24 +53,41 @@ namespace dvize.NoNoZone
                     if (distance < NoNoZonePlugin.DistanceClearBotSpawn.Value)
                     {
                         Logger.LogInfo($"NoNoZone: {botOwner.Profile.Info.Settings.Role} Spawned Too Close");
-
+                        
                         try
                         {
-                            botOwner.Disable(); 
-                        }
-                        catch (Exception f)
-                        {
-                            Logger.LogError($"NoNoZone: Failed to disable bot: {f}");
-                        }
+                            //find botOwner.GetPlayer in game.RegisteredPlayers list
+                            foreach (var tempplayer in game.RegisteredPlayers)
+                            {
+                                //if botOwner.GetPlayer == game.RegisteredPlayers enabled = false
+                                if (tempplayer == botOwner.GetPlayer)
+                                {
+                                    
+                                    Logger.LogDebug("NoNoZone: Disabled Player: " + tempplayer.Profile.Nickname + ", " + tempplayer.Profile.Info.Settings.Role);
 
-                        try
-                        {
-                            game.RegisteredPlayers.Remove(botOwner.GetPlayer);
+                                    game.UnregisterPlayer(botOwner.GetPlayer);
+
+                                    __instance.RemovePlayer(botOwner.GetPlayer);
+                                    __instance.Remove(botOwner);
+
+                                    //var theweaponid = tempplayer.LastEquippedWeaponOrKnifeItem.Id;
+
+
+                                    //tempplayer.gameObject.DestroyAllChildren(false);
+                                    //botOwner.gameObject.DestroyAllChildren(false);
+
+                                    //game.DestroyLoot(theweaponid);
+                                    break;
+                                }
+                                
+                            }
                         }
-                        catch (Exception testc)
+                        catch (Exception e)
                         {
-                            Logger.LogError($"NoNoZone: Failed to Remove Registered Player: {testc}");
+                            Logger.LogError("NoNoZone: Failed to remove Bot Owner and Player: " + e);
                         }
+                        
+                        
                     }
                 }
 

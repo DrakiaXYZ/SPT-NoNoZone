@@ -15,7 +15,7 @@ using dvize.NoNoZone;
 namespace NoNoZone
 {
 
-    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.1.0")]
+    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.3.0")]
     class NoNoZonePlugin : BaseUnityPlugin
     {
         //create configentry for each map.  factory, interchange, laboratory, lighthouse, reserve, shoreline, woods, customs, tarkovstreets

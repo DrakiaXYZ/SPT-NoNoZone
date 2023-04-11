@@ -75,7 +75,7 @@ namespace dvize.NoNoZone
                     distanceClearValue = NoNoZonePlugin.tarkovstreetsDistance.Value;
                     break;
                 default:
-                    distanceClearValue = 20.0f;
+                    distanceClearValue = 250.0f;
                     break;
             }
 

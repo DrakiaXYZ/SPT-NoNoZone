@@ -1,25 +1,18 @@
 ﻿
 using System;
+using System.Diagnostics;
 using BepInEx;
 using BepInEx.Configuration;
-using UnityEngine;
-using Newtonsoft.Json;
-using EFT;
-using System.IO;
-using System.Reflection;
-using Comfort.Common;
-using EFT.UI.Ragfair;
-using System.Collections.Generic;
-using dvize.NoNoZone;
+using ZonePatches;
+using VersionChecker;
+using Aki.Reflection.Patching;
 
 namespace NoNoZone
 {
 
-    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.3.0")]
-    class NoNoZonePlugin : BaseUnityPlugin
+    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.4.0")]
+    internal class NoNoZonePlugin : BaseUnityPlugin
     {
-        //create configentry for each map.  factory, interchange, laboratory, lighthouse, reserve, shoreline, woods, customs, tarkovstreets
-        
         public static ConfigEntry<float> factoryDistance;
         public static ConfigEntry<float> interchangeDistance;
         public static ConfigEntry<float> laboratoryDistance;
@@ -29,10 +22,9 @@ namespace NoNoZone
         public static ConfigEntry<float> woodsDistance;
         public static ConfigEntry<float> customsDistance;
         public static ConfigEntry<float> tarkovstreetsDistance;
-        
-        private void Awake()
+
+        internal void Awake()
         {
-            
             factoryDistance = Config.Bind(
                 "Main Settings",
                 "factory",
@@ -86,12 +78,27 @@ namespace NoNoZone
                 "streets",
                 20.0f,
                 "Distance to Keep Clear of Bot Spawns");
-
-
-            new BotClassSpawnerPatch().Enable();
-
+           
+            CheckEftVersion();
         }
 
-
+        private void Start()
+        {
+            new ZonePatches.AddFromListPatch().Enable();
+            new ZonePatches.AddPatch().Enable();
+            new ZonePatches.AddPlayerPatch().Enable();
+        }
+        private void CheckEftVersion()
+        {
+            // Make sure the version of EFT being run is the correct version
+            int currentVersion = FileVersionInfo.GetVersionInfo(BepInEx.Paths.ExecutablePath).FilePrivatePart;
+            int buildVersion = TarkovVersion.BuildVersion;
+            if (currentVersion != buildVersion)
+            {
+                Logger.LogError($"ERROR: This version of {Info.Metadata.Name} v{Info.Metadata.Version} was built for Tarkov {buildVersion}, but you are running {currentVersion}. Please download the correct plugin version.");
+                EFT.UI.ConsoleScreen.LogError($"ERROR: This version of {Info.Metadata.Name} v{Info.Metadata.Version} was built for Tarkov {buildVersion}, but you are running {currentVersion}. Please download the correct plugin version.");
+                throw new Exception($"Invalid EFT Version ({currentVersion} != {buildVersion})");
+            }
+        }
     }
 }

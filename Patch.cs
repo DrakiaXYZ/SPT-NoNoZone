@@ -1,52 +1,31 @@
-﻿using Aki.Reflection.Patching;
-using Aki.Reflection.Utils;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using EFT;
+using Aki.Reflection.Patching;
 using Comfort.Common;
-using UnityEngine;
+using EFT;
+using HarmonyLib;
 using NoNoZone;
-using System.Collections.Generic;
-using System.Threading;
-using System;
-using EFT.UI.Matchmaker;
+using UnityEngine;
 
-namespace dvize.NoNoZone
+namespace ZonePatches
 {
-    public class BotClassSpawnerPatch : ModulePatch
+    public class AddFromListPatch : ModulePatch
     {
-        protected override MethodBase GetTargetMethod()
-        {
-            try
-            {
-                return typeof(BotsClass).GetMethod("AddFromList", BindingFlags.Instance | BindingFlags.Public);
-            }
-            catch
-            {
-                Logger.LogInfo("NoNoZone: Failed to get target method");
-            }
-
-            return null;
-        }
+        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(BotsClass),"AddFromList");
 
         [PatchPrefix]
-        public static bool Prefix(BotsClass __instance, ref List<BotOwner> ___list_0)
+        private static void Prefix_AddFromList(BotsClass __instance)
         {
-            var game = Singleton<GameWorld>.Instance;
-            var player = game.MainPlayer;
-            var playerPosition = player.Transform.position;
+            GameWorld game = Singleton<GameWorld>.Instance;
+            Player player = game.MainPlayer;
+            Vector3 playerPosition = player.Transform.position;
             float distanceClearValue = 0f;
-            string location;
-
-
-            location = player.Location;
-
-
+            string location = player.Location;
+            var list_0 = (List<BotOwner>)AccessTools.Field(typeof(BotsClass), "list_0").GetValue(__instance);
             switch (location)
             {
                 case "factory4_day":
-                    distanceClearValue = NoNoZonePlugin.factoryDistance.Value;
-                    break;
                 case "factory4_night":
                     distanceClearValue = NoNoZonePlugin.factoryDistance.Value;
                     break;
@@ -75,33 +54,182 @@ namespace dvize.NoNoZone
                     distanceClearValue = NoNoZonePlugin.tarkovstreetsDistance.Value;
                     break;
                 default:
-                    distanceClearValue = 250.0f;
+                    distanceClearValue = 25.0f;
                     break;
             }
 
 
-            for (int i = 0; i < ___list_0.Count; i++)
+            if (list_0.Count > 0)
             {
-                var botOwner = ___list_0[i];
-                var botPosition = botOwner.Transform.position;
+                foreach (BotOwner botOwner in list_0)
+                {
+                    if (botOwner.GetPlayer != player)
+                    {
+                        var botPosition = botOwner.Transform.position;
+                    var distance = Vector3.Distance(botPosition, playerPosition);
+
+                    if (distance < distanceClearValue)
+                    {
+                        var tempplayer = game.RegisteredPlayers.FirstOrDefault(p => p == botOwner.GetPlayer);
+                        if (tempplayer != null)
+                        {
+                           /* Logger.LogDebug($"Location Value is: {location} and the distance Cap is ({distanceClearValue}(m)");
+                            Logger.LogDebug($"NoNoZone: Disabled Player: {tempplayer.Profile.Nickname}, {tempplayer.Profile.Info.Settings.Role} ({distance}m)");*/
+
+                            game.UnregisterPlayer(botOwner.GetPlayer);
+                            __instance.RemovePlayer(botOwner.GetPlayer);
+                            __instance.Remove(botOwner);
+                        }
+                    }
+                    }
+                    
+                }
+
+            }
+
+        }
+
+    }
+
+    public class AddPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(BotsClass), "Add");
+
+        [PatchPrefix]
+        private static void Prefix_Add(BotsClass __instance, BotOwner bot)
+        {
+            GameWorld game = Singleton<GameWorld>.Instance;
+            Player player = game.MainPlayer;
+            Vector3 playerPosition = player.Transform.position;
+            float distanceClearValue = 0f;
+            string location = player.Location;
+
+            switch (location)
+            {
+                case "factory4_day":
+                case "factory4_night":
+                    distanceClearValue = NoNoZonePlugin.factoryDistance.Value;
+                    break;
+                case "bigmap":
+                    distanceClearValue = NoNoZonePlugin.customsDistance.Value;
+                    break;
+                case "interchange":
+                    distanceClearValue = NoNoZonePlugin.interchangeDistance.Value;
+                    break;
+                case "reservbase":
+                    distanceClearValue = NoNoZonePlugin.reserveDistance.Value;
+                    break;
+                case "laboratory":
+                    distanceClearValue = NoNoZonePlugin.laboratoryDistance.Value;
+                    break;
+                case "lighthouse":
+                    distanceClearValue = NoNoZonePlugin.lighthouseDistance.Value;
+                    break;
+                case "shoreline":
+                    distanceClearValue = NoNoZonePlugin.shorelineDistance.Value;
+                    break;
+                case "woods":
+                    distanceClearValue = NoNoZonePlugin.woodsDistance.Value;
+                    break;
+                case "tarkovstreets":
+                    distanceClearValue = NoNoZonePlugin.tarkovstreetsDistance.Value;
+                    break;
+                default:
+                    distanceClearValue = 25.0f;
+                    break;
+            }
+
+
+            var botPosition = bot.Transform.position;
+            var distance = Vector3.Distance(botPosition, playerPosition);
+
+            if (distance < distanceClearValue)
+            {
+                var tempplayer = game.RegisteredPlayers.FirstOrDefault(p => p == bot.GetPlayer);
+                if (tempplayer != null)
+                {
+                    /*Logger.LogDebug($"Location Value is: {location} and the distance Cap is ({distanceClearValue}(m)");
+                    Logger.LogDebug($"NoNoZone: Disabled Player: {tempplayer.Profile.Nickname}, {tempplayer.Profile.Info.Settings.Role} ({distance}m)");*/
+
+                    game.UnregisterPlayer(bot.GetPlayer);
+                    __instance.RemovePlayer(bot.GetPlayer);
+                    __instance.Remove(bot);
+                }
+            }
+
+        }
+
+    }
+
+    public class AddPlayerPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(BotsClass), "AddPlayer");
+
+        [PatchPrefix]
+        private static void Prefix_AddPlayer(BotsClass __instance, Player player)
+        {
+            if (player.IsAI)
+            {
+                var BotPlayer = player;
+                GameWorld game = Singleton<GameWorld>.Instance;
+                Player mainplayer = game.MainPlayer;
+                Vector3 playerPosition = mainplayer.Transform.position;
+                float distanceClearValue = 0f;
+                string location = mainplayer.Location;
+
+                switch (location)
+                {
+                    case "factory4_day":
+                    case "factory4_night":
+                        distanceClearValue = NoNoZonePlugin.factoryDistance.Value;
+                        break;
+                    case "bigmap":
+                        distanceClearValue = NoNoZonePlugin.customsDistance.Value;
+                        break;
+                    case "interchange":
+                        distanceClearValue = NoNoZonePlugin.interchangeDistance.Value;
+                        break;
+                    case "reservbase":
+                        distanceClearValue = NoNoZonePlugin.reserveDistance.Value;
+                        break;
+                    case "laboratory":
+                        distanceClearValue = NoNoZonePlugin.laboratoryDistance.Value;
+                        break;
+                    case "lighthouse":
+                        distanceClearValue = NoNoZonePlugin.lighthouseDistance.Value;
+                        break;
+                    case "shoreline":
+                        distanceClearValue = NoNoZonePlugin.shorelineDistance.Value;
+                        break;
+                    case "woods":
+                        distanceClearValue = NoNoZonePlugin.woodsDistance.Value;
+                        break;
+                    case "tarkovstreets":
+                        distanceClearValue = NoNoZonePlugin.tarkovstreetsDistance.Value;
+                        break;
+                    default:
+                        distanceClearValue = 25.0f;
+                        break;
+                }
+
+
+                var botPosition = BotPlayer.Transform.position;
                 var distance = Vector3.Distance(botPosition, playerPosition);
 
                 if (distance < distanceClearValue)
                 {
-                    var tempplayer = game.RegisteredPlayers.FirstOrDefault(p => p == botOwner.GetPlayer);
-                    if (tempplayer != null)
+                    if (BotPlayer != null)
                     {
-                        Logger.LogDebug($"Location Value is: {location} and the distance Cap is ({distanceClearValue}(m)");
-                        Logger.LogDebug($"NoNoZone: Disabled Player: {tempplayer.Profile.Nickname}, {tempplayer.Profile.Info.Settings.Role} ({distance}m)");
+                        /*Logger.LogDebug($"Location Value is: {location} and the distance Cap is ({distanceClearValue}(m)");
+                        Logger.LogDebug($"NoNoZone: Disabled Player: {BotPlayer.Profile.Nickname}, {BotPlayer.Profile.Info.Settings.Role} ({distance}m)");*/
 
-                        game.UnregisterPlayer(botOwner.GetPlayer);
-                        __instance.RemovePlayer(botOwner.GetPlayer);
-                        __instance.Remove(botOwner);
+                        game.UnregisterPlayer(BotPlayer);
+                        __instance.RemovePlayer(BotPlayer);
+                        __instance.Remove(BotPlayer.AIData.BotOwner);
                     }
                 }
             }
-
-            return true;
         }
+
     }
 }

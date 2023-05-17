@@ -10,7 +10,7 @@ using Aki.Reflection.Patching;
 namespace NoNoZone
 {
 
-    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.4.0")]
+    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.4.1")]
     internal class NoNoZonePlugin : BaseUnityPlugin
     {
         public static ConfigEntry<float> factoryDistance;

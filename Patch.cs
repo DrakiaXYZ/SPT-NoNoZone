@@ -12,7 +12,7 @@ namespace ZonePatches
 {
     public class AddFromListPatch : ModulePatch
     {
-        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(BotsClass),"AddFromList");
+        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(BotsClass), "AddFromList");
 
         [PatchPrefix]
         private static void Prefix_AddFromList(BotsClass __instance)
@@ -66,23 +66,23 @@ namespace ZonePatches
                     if (botOwner.GetPlayer != player)
                     {
                         var botPosition = botOwner.Transform.position;
-                    var distance = Vector3.Distance(botPosition, playerPosition);
+                        var distance = Vector3.Distance(botPosition, playerPosition);
 
-                    if (distance < distanceClearValue)
-                    {
-                        var tempplayer = game.RegisteredPlayers.FirstOrDefault(p => p == botOwner.GetPlayer);
-                        if (tempplayer != null)
+                        if (distance < distanceClearValue)
                         {
-                           /* Logger.LogDebug($"Location Value is: {location} and the distance Cap is ({distanceClearValue}(m)");
-                            Logger.LogDebug($"NoNoZone: Disabled Player: {tempplayer.Profile.Nickname}, {tempplayer.Profile.Info.Settings.Role} ({distance}m)");*/
+                            var tempplayer = game.RegisteredPlayers.FirstOrDefault(p => p == botOwner.GetPlayer);
+                            if (tempplayer != null)
+                            {
+                                /* Logger.LogDebug($"Location Value is: {location} and the distance Cap is ({distanceClearValue}(m)");
+                                 Logger.LogDebug($"NoNoZone: Disabled Player: {tempplayer.Profile.Nickname}, {tempplayer.Profile.Info.Settings.Role} ({distance}m)");*/
 
-                            game.UnregisterPlayer(botOwner.GetPlayer);
-                            __instance.RemovePlayer(botOwner.GetPlayer);
-                            __instance.Remove(botOwner);
+                                game.UnregisterPlayer(botOwner.GetPlayer);
+                                __instance.RemovePlayer(botOwner.GetPlayer);
+                                __instance.Remove(botOwner);
+                            }
                         }
                     }
-                    }
-                    
+
                 }
 
             }

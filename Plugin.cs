@@ -3,14 +3,12 @@ using System;
 using System.Diagnostics;
 using BepInEx;
 using BepInEx.Configuration;
-using ZonePatches;
 using VersionChecker;
-using Aki.Reflection.Patching;
 
 namespace NoNoZone
 {
 
-    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.4.1")]
+    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.4.2")]
     internal class NoNoZonePlugin : BaseUnityPlugin
     {
         public static ConfigEntry<float> factoryDistance;
@@ -78,7 +76,7 @@ namespace NoNoZone
                 "streets",
                 20.0f,
                 "Distance to Keep Clear of Bot Spawns");
-           
+
             CheckEftVersion();
         }
 

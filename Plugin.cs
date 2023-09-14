@@ -1,9 +1,6 @@
 ﻿
-using System;
-using System.Diagnostics;
 using BepInEx;
 using BepInEx.Configuration;
-using VersionChecker;
 
 namespace NoNoZone
 {
@@ -76,8 +73,6 @@ namespace NoNoZone
                 "streets",
                 20.0f,
                 "Distance to Keep Clear of Bot Spawns");
-
-            CheckEftVersion();
         }
 
         private void Start()
@@ -86,17 +81,47 @@ namespace NoNoZone
             new ZonePatches.AddPatch().Enable();
             new ZonePatches.AddPlayerPatch().Enable();
         }
-        private void CheckEftVersion()
+
+        public static float GetDistance(string location)
         {
-            // Make sure the version of EFT being run is the correct version
-            int currentVersion = FileVersionInfo.GetVersionInfo(BepInEx.Paths.ExecutablePath).FilePrivatePart;
-            int buildVersion = TarkovVersion.BuildVersion;
-            if (currentVersion != buildVersion)
+            float distanceClearValue;
+
+            switch (location)
             {
-                Logger.LogError($"ERROR: This version of {Info.Metadata.Name} v{Info.Metadata.Version} was built for Tarkov {buildVersion}, but you are running {currentVersion}. Please download the correct plugin version.");
-                EFT.UI.ConsoleScreen.LogError($"ERROR: This version of {Info.Metadata.Name} v{Info.Metadata.Version} was built for Tarkov {buildVersion}, but you are running {currentVersion}. Please download the correct plugin version.");
-                throw new Exception($"Invalid EFT Version ({currentVersion} != {buildVersion})");
+                case "factory4_day":
+                case "factory4_night":
+                    distanceClearValue = NoNoZonePlugin.factoryDistance.Value;
+                    break;
+                case "bigmap":
+                    distanceClearValue = NoNoZonePlugin.customsDistance.Value;
+                    break;
+                case "interchange":
+                    distanceClearValue = NoNoZonePlugin.interchangeDistance.Value;
+                    break;
+                case "reservbase":
+                    distanceClearValue = NoNoZonePlugin.reserveDistance.Value;
+                    break;
+                case "laboratory":
+                    distanceClearValue = NoNoZonePlugin.laboratoryDistance.Value;
+                    break;
+                case "lighthouse":
+                    distanceClearValue = NoNoZonePlugin.lighthouseDistance.Value;
+                    break;
+                case "shoreline":
+                    distanceClearValue = NoNoZonePlugin.shorelineDistance.Value;
+                    break;
+                case "woods":
+                    distanceClearValue = NoNoZonePlugin.woodsDistance.Value;
+                    break;
+                case "tarkovstreets":
+                    distanceClearValue = NoNoZonePlugin.tarkovstreetsDistance.Value;
+                    break;
+                default:
+                    distanceClearValue = 25.0f;
+                    break;
             }
+
+            return distanceClearValue;
         }
     }
 }

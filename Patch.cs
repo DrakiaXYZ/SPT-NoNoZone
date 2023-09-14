@@ -12,7 +12,13 @@ namespace ZonePatches
 {
     public class AddFromListPatch : ModulePatch
     {
-        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(BotsClass), "AddFromList");
+        private static FieldInfo _list0Field;
+        protected override MethodBase GetTargetMethod()
+        {
+            _list0Field = AccessTools.Field(typeof(BotsClass), "list_0");
+
+            return AccessTools.Method(typeof(BotsClass), "AddFromList");
+        }
 
         [PatchPrefix]
         private static void Prefix_AddFromList(BotsClass __instance)
@@ -20,75 +26,33 @@ namespace ZonePatches
             GameWorld game = Singleton<GameWorld>.Instance;
             Player player = game.MainPlayer;
             Vector3 playerPosition = player.Transform.position;
-            float distanceClearValue = 0f;
             string location = player.Location;
-            var list_0 = (List<BotOwner>)AccessTools.Field(typeof(BotsClass), "list_0").GetValue(__instance);
-            switch (location)
-            {
-                case "factory4_day":
-                case "factory4_night":
-                    distanceClearValue = NoNoZonePlugin.factoryDistance.Value;
-                    break;
-                case "bigmap":
-                    distanceClearValue = NoNoZonePlugin.customsDistance.Value;
-                    break;
-                case "interchange":
-                    distanceClearValue = NoNoZonePlugin.interchangeDistance.Value;
-                    break;
-                case "reservbase":
-                    distanceClearValue = NoNoZonePlugin.reserveDistance.Value;
-                    break;
-                case "laboratory":
-                    distanceClearValue = NoNoZonePlugin.laboratoryDistance.Value;
-                    break;
-                case "lighthouse":
-                    distanceClearValue = NoNoZonePlugin.lighthouseDistance.Value;
-                    break;
-                case "shoreline":
-                    distanceClearValue = NoNoZonePlugin.shorelineDistance.Value;
-                    break;
-                case "woods":
-                    distanceClearValue = NoNoZonePlugin.woodsDistance.Value;
-                    break;
-                case "tarkovstreets":
-                    distanceClearValue = NoNoZonePlugin.tarkovstreetsDistance.Value;
-                    break;
-                default:
-                    distanceClearValue = 25.0f;
-                    break;
-            }
+            float distanceClearValue = NoNoZonePlugin.GetDistance(location);
+            var list_0 = (List<BotOwner>)_list0Field.GetValue(__instance);
 
-
-            if (list_0.Count > 0)
+            foreach (BotOwner botOwner in list_0)
             {
-                foreach (BotOwner botOwner in list_0)
+                if (botOwner.GetPlayer != player)
                 {
-                    if (botOwner.GetPlayer != player)
+                    var botPosition = botOwner.Transform.position;
+                    var distance = Vector3.Distance(botPosition, playerPosition);
+
+                    if (distance < distanceClearValue)
                     {
-                        var botPosition = botOwner.Transform.position;
-                        var distance = Vector3.Distance(botPosition, playerPosition);
-
-                        if (distance < distanceClearValue)
+                        var tempplayer = game.RegisteredPlayers.FirstOrDefault(p => p == botOwner.GetPlayer);
+                        if (tempplayer != null)
                         {
-                            var tempplayer = game.RegisteredPlayers.FirstOrDefault(p => p == botOwner.GetPlayer);
-                            if (tempplayer != null)
-                            {
-                                /* Logger.LogDebug($"Location Value is: {location} and the distance Cap is ({distanceClearValue}(m)");
-                                 Logger.LogDebug($"NoNoZone: Disabled Player: {tempplayer.Profile.Nickname}, {tempplayer.Profile.Info.Settings.Role} ({distance}m)");*/
+                            /* Logger.LogDebug($"Location Value is: {location} and the distance Cap is ({distanceClearValue}(m)");
+                                Logger.LogDebug($"NoNoZone: Disabled Player: {tempplayer.Profile.Nickname}, {tempplayer.Profile.Info.Settings.Role} ({distance}m)");*/
 
-                                game.UnregisterPlayer(botOwner.GetPlayer);
-                                __instance.RemovePlayer(botOwner.GetPlayer);
-                                __instance.Remove(botOwner);
-                            }
+                            game.UnregisterPlayer(botOwner.GetPlayer);
+                            __instance.RemovePlayer(botOwner.GetPlayer);
+                            __instance.Remove(botOwner);
                         }
                     }
-
                 }
-
             }
-
         }
-
     }
 
     public class AddPatch : ModulePatch
@@ -101,43 +65,8 @@ namespace ZonePatches
             GameWorld game = Singleton<GameWorld>.Instance;
             Player player = game.MainPlayer;
             Vector3 playerPosition = player.Transform.position;
-            float distanceClearValue = 0f;
             string location = player.Location;
-
-            switch (location)
-            {
-                case "factory4_day":
-                case "factory4_night":
-                    distanceClearValue = NoNoZonePlugin.factoryDistance.Value;
-                    break;
-                case "bigmap":
-                    distanceClearValue = NoNoZonePlugin.customsDistance.Value;
-                    break;
-                case "interchange":
-                    distanceClearValue = NoNoZonePlugin.interchangeDistance.Value;
-                    break;
-                case "reservbase":
-                    distanceClearValue = NoNoZonePlugin.reserveDistance.Value;
-                    break;
-                case "laboratory":
-                    distanceClearValue = NoNoZonePlugin.laboratoryDistance.Value;
-                    break;
-                case "lighthouse":
-                    distanceClearValue = NoNoZonePlugin.lighthouseDistance.Value;
-                    break;
-                case "shoreline":
-                    distanceClearValue = NoNoZonePlugin.shorelineDistance.Value;
-                    break;
-                case "woods":
-                    distanceClearValue = NoNoZonePlugin.woodsDistance.Value;
-                    break;
-                case "tarkovstreets":
-                    distanceClearValue = NoNoZonePlugin.tarkovstreetsDistance.Value;
-                    break;
-                default:
-                    distanceClearValue = 25.0f;
-                    break;
-            }
+            float distanceClearValue = NoNoZonePlugin.GetDistance(location);
 
 
             var botPosition = bot.Transform.position;
@@ -156,9 +85,7 @@ namespace ZonePatches
                     __instance.Remove(bot);
                 }
             }
-
         }
-
     }
 
     public class AddPlayerPatch : ModulePatch
@@ -174,44 +101,8 @@ namespace ZonePatches
                 GameWorld game = Singleton<GameWorld>.Instance;
                 Player mainplayer = game.MainPlayer;
                 Vector3 playerPosition = mainplayer.Transform.position;
-                float distanceClearValue = 0f;
                 string location = mainplayer.Location;
-
-                switch (location)
-                {
-                    case "factory4_day":
-                    case "factory4_night":
-                        distanceClearValue = NoNoZonePlugin.factoryDistance.Value;
-                        break;
-                    case "bigmap":
-                        distanceClearValue = NoNoZonePlugin.customsDistance.Value;
-                        break;
-                    case "interchange":
-                        distanceClearValue = NoNoZonePlugin.interchangeDistance.Value;
-                        break;
-                    case "reservbase":
-                        distanceClearValue = NoNoZonePlugin.reserveDistance.Value;
-                        break;
-                    case "laboratory":
-                        distanceClearValue = NoNoZonePlugin.laboratoryDistance.Value;
-                        break;
-                    case "lighthouse":
-                        distanceClearValue = NoNoZonePlugin.lighthouseDistance.Value;
-                        break;
-                    case "shoreline":
-                        distanceClearValue = NoNoZonePlugin.shorelineDistance.Value;
-                        break;
-                    case "woods":
-                        distanceClearValue = NoNoZonePlugin.woodsDistance.Value;
-                        break;
-                    case "tarkovstreets":
-                        distanceClearValue = NoNoZonePlugin.tarkovstreetsDistance.Value;
-                        break;
-                    default:
-                        distanceClearValue = 25.0f;
-                        break;
-                }
-
+                float distanceClearValue = NoNoZonePlugin.GetDistance(location);
 
                 var botPosition = BotPlayer.Transform.position;
                 var distance = Vector3.Distance(botPosition, playerPosition);
@@ -230,6 +121,5 @@ namespace ZonePatches
                 }
             }
         }
-
     }
 }

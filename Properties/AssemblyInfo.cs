@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
-using VersionChecker;
 
 [assembly: AssemblyTitle("dvize.NoNoZone")]
 [assembly: AssemblyDescription("")]
@@ -20,4 +19,3 @@ using VersionChecker;
 
 [assembly: AssemblyVersion("1.4.2.0")]
 [assembly: AssemblyFileVersion("1.4.2.0")]
-[assembly: TarkovVersion(23399)]

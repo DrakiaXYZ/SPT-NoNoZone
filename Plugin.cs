@@ -5,7 +5,7 @@ using BepInEx.Configuration;
 namespace NoNoZone
 {
 
-    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.4.2")]
+    [BepInPlugin("com.dvize.NoNoZone", "dvize.NoNoZone", "1.5.0")]
     internal class NoNoZonePlugin : BaseUnityPlugin
     {
         public static ConfigEntry<float> factoryDistance;
